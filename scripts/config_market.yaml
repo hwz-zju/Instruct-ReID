@@ -1,0 +1,8 @@
+tasks:
+    0:
+        loss_weight: 1.0
+        gres_ratio: 1
+        task_name: DataBuilder_sc
+        # ceph or cluster
+        root_path: <your project root> + instructReID/data/market
+        train_file_path: <your project root> + instructReID/data/market/datalist/train.txt

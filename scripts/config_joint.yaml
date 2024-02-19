@@ -1,0 +1,70 @@
+tasks:
+  0:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_ctcc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/real1
+    train_file_path: <your project root> + instructReID/data/real1/datalist/train_ctcc.txt
+  1:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_sc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/market
+    train_file_path: <your project root> + instructReID/data/market/datalist/train.txt
+  2:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_sc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/msmt
+    train_file_path: <your project root> + instructReID/data/msmt/datalist/train.txt
+  3:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_sc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/cuhk
+    train_file_path: <your project root> + instructReID/data/cuhk/datalist/train.txt
+  4:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_cc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/ltcc
+    train_file_path: <your project root> + instructReID/data/ltcc/datalist/train.txt
+  5:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_cross
+    root_path: <your project root> + instructReID/data/llcm
+    train_file_path: <your project root> + instructReID/data/llcm/train.txt
+  6:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_t2i
+    attt_file: <your project root> + instructReID/data/cuhk_pedes/caption_t2i_v2.json
+    root_path: <your project root> + instructReID/data/cuhk_pedes
+    train_file_path: <your project root> + instructReID/data/cuhk_pedes/train_t2i_v2.txt
+  7:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_attr
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/real1
+    train_file_path: <your project root> + instructReID/data/real1/datalist/train_attr.txt
+  8:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_cc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/prcc
+    train_file_path: <your project root> + instructReID/data/prcc/datalist/train.txt
+  9:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_cc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/vc_clothes
+    train_file_path: <your project root> + instructReID/data/vc_clothes/datalist/train_cc_clo.txt

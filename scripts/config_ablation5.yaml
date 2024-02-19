@@ -1,0 +1,45 @@
+common:
+    # transformer setting
+    DROP_PATH: 0.0
+    DROP_OUT: 0.0
+    ATT_DROP_RATE: 0.0
+    DROP_PATH_CLO: 0.0
+    DROP_OUT_CLO: 0.0
+    ATT_DROP_RATE_CLO: 0.0
+    DROP_PATH_FUSION: 0.0
+    DROP_OUT_FUSION: 0.0
+    ATT_DROP_RATE_FUSION: 0.0
+    STRIDE_SIZE: [16, 16]
+    JPM: True
+    SHIFT_NUM: 5
+    SHUFFLE_GROUP: 2
+    DEVIDE_LENGTH: 4
+    RE_ARRANGE: True
+    SIE_CAMERA: False
+    SIE_VIEW: False
+    FUSION_DEPTH: 3
+    CLOTHES_AVGPOOL: True
+    BIO_EMBEDDING: 768
+    CLO_EMBEDDING: 768
+    FUSION_EMBEDDING: 384
+    PRETRAIN: True
+    PATCH_SIZE_CLO: 16
+    STRIDE_SIZE_CLO: [16,16]
+
+    # structure setting
+    NECK_FEAT: after
+    ID_LOSS_TYPE: Linear
+    # if cosine
+    SCALE: 30.0
+    MARGIN: 0.40
+
+    # training tricks setting
+    LABEL_SMOOTH: False
+    CENTER_LOSS: False
+
+    # circle loss
+    CIRCLE_LOSS: False
+    GAMMA: 256
+    C_MARGIN: 0.25
+    W: 1.0
+    metric: cosine

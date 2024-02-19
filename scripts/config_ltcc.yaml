@@ -1,0 +1,8 @@
+tasks:
+  0:
+    loss_weight: 1.0
+    gres_ratio: 1
+    task_name: DataBuilder_cc
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/ltcc
+    train_file_path: <your project root> + instructReID/data/ltcc/datalist/train.txt
