@@ -68,3 +68,10 @@ tasks:
     # ceph or cluster
     root_path: <your project root> + instructReID/data/vc_clothes
     train_file_path: <your project root> + instructReID/data/vc_clothes/datalist/train_cc_clo.txt
+  10:
+    loss_weight: 1.0
+    gres_ratio: 6
+    task_name: DataBuilder_t2i
+    # ceph or cluster
+    root_path: <your project root> + instructReID/data/PLIP
+    train_file_path: <your project root> + instructReID/data/PLIP/train_t2i.txt
