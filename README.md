@@ -5,14 +5,21 @@ This repo provides a basic training and testing framework for instruction guided
 ### Installation
 ```
 Requirements:
-ftfy
-regex
-tqdm
-torch
-torchvision
-socket
-sklearn
-opencv
+torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0
+ftfy==5.8
+regex==2023.10.3 
+tqdm==4.65.0
+transformers==4.31.0
+bytecode ==0.15.1
+matplotlib==3.8.0
+scikit-learn ==1.3.0
+opencv-python==4.9.0.80
+pyyaml==6.0.1
+clip==0.2.0
+timm==0.9.16
+tensorboardX==2.6.2.2
+easydict==1.13
+chardet==5.2.0
 ```
 
 ### Prepare Pre-trained Models
@@ -140,7 +147,8 @@ data
 
 ```
 shell
-./scripts/market/train.sh transformer_dualattn_joint ${gpu_num} ${description} ${port}
+./scripts/train.sh transformer_dualattn_joint ${gpu_num} ${description} ${port}
+# e.g., sh ./scripts/train.sh transformer_dualattn_joint 1 debug 6656
 ```
 
 ### Testing
@@ -148,6 +156,7 @@ shell
 ```
 shell
 ./scripts/test.sh transformer_dualattn_joint ${/PATH/TO/YOUR/MODEL/} ${test_task_type} ${query-txt} ${gallery-txt} ${root_path} # default 1 GPUs
+# e.g., sh ./scripts/test.sh transformer_dualattn_joint <your project root>/Instruct-ReID/checkpoint_cuhk.pth.tar sc <your project root>/Instruct-ReID/data/cuhk/datalist/query.txt <your project root>+/Instruct-ReID/data/cuhk/datalist/gallery.txt <your project root>+/Instruct-ReID/data/cuhk
 ```
 
 ### inference model

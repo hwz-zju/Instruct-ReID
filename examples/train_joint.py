@@ -118,8 +118,8 @@ def configuration():
 
     args = parser.parse_args()
     with open(args.config) as f:
-        # config = yaml.load(f, Loader=yaml.FullLoader)
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        # config = yaml.load(f)
     if 'common' in config:
         for k, v in config['common'].items():
             print(k, v)
@@ -133,7 +133,8 @@ class Runner(object):
         super(Runner, self).__init__()
         if args.data_config is not None:
             with open(args.data_config) as f:
-                data_config = yaml.load(f)
+                data_config = yaml.load(f, Loader=yaml.FullLoader)
+                # data_config = yaml.load(f)
             args.data_config = data_config
         else:
             args.data_config = None

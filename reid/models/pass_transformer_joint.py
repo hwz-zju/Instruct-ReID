@@ -311,7 +311,7 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
         super(PASS_Transformer_DualAttn_joint, self).__init__()
         if net_config.vit_type=='base':
             # self.base = vit_base_patch16_224_TransReID(img_size=(256,128), sie_xishu=3.0, local_feature=True, camera=0, view=0, stride_size=[12, 12], drop_path_rate=0.1)
-            model_path = '/workspace/model_dir/code_ALBEF/pass_vit_base_full.pth'
+            # model_path = '<your project root> + /pass_vit_base_full.pth'
             self.visual_encoder = vit_base_patch16_224_TransReID(img_size=(256,128), sie_xishu=3.0, camera=0, view=0, stride_size=[16, 16], drop_path_rate=0.1, drop_rate=0.0,attn_drop_rate=0.0, gem_pool=False, stem_conv=False)
             # self.visual_encoder = VisionTransformer(
             # img_size=256, patch_size=16, embed_dim=768, depth=12, num_heads=12,
@@ -322,12 +322,12 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             # for k,v in self.visual_encoder_m.named_parameters():
             #     v.requires_grad=False
             # import pdb;pdb.set_trace()
-            self.tokenizer = BertTokenizer.from_pretrained('/workspace/model_dir/code_ALBEF/instructReID/bert-base-uncased')
+            self.tokenizer = BertTokenizer.from_pretrained('<your project root> + /instructReID/bert-base-uncased')
             
-            bert_config = BertConfig.from_json_file('/workspace/model_dir/code_ALBEF/instructReID/config_bert.json')
-            self.text_encoder = BertForMaskedLM.from_pretrained('/workspace/model_dir/code_ALBEF/instructReID/bert-base-uncased', config=bert_config)
+            bert_config = BertConfig.from_json_file('<your project root> + /instructReID/config_bert.json')
+            self.text_encoder = BertForMaskedLM.from_pretrained('<your project root> + /instructReID/bert-base-uncased', config=bert_config)
             
-            self.text_encoder_m = BertForMaskedLM.from_pretrained('/workspace/model_dir/code_ALBEF/instructReID/bert-base-uncased', config=bert_config)
+            self.text_encoder_m = BertForMaskedLM.from_pretrained('<your project root> + /instructReID/bert-base-uncased', config=bert_config)
             # for k,v in self.text_encoder_m.named_parameters():
             #     v.requires_grad=False
             self.text_width = self.text_encoder.config.hidden_size
