@@ -3,5 +3,5 @@ tasks:
         loss_weight: 1.0
         gres_ratio: 1
         task_name: DataBuilder_cross
-        root_path: <your project root> + instructReID/data/llcm
-        train_file_path: <your project root> + instructReID/data/llcm/train.txt
+        root_path: <your project root> + Instruct-ReID/data/llcm
+        train_file_path: <your project root> + Instruct-ReID/data/llcm/train.txt

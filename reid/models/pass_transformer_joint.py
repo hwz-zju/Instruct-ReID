@@ -11,7 +11,6 @@ from torch import Tensor
 import copy
 from reid.models.backbone.pass_vit import vit_base_patch16_224_TransReID, Block, vit_small_patch16_224_TransReID
 from reid.models.backbone.vit_albef import VisionTransformer
-# from reid.models.backbone.swin_transformer import swin_base_patch4_window7_224, swin_small_patch4_window7_224, swin_tiny_patch4_window7_224
 from reid.models.layers.metric import build_metric
 from sklearn.cluster import KMeans
 import numpy as np
@@ -212,11 +211,6 @@ class CrossAttentionLayer(nn.Module):
                 memory_key_padding_mask: Optional[Tensor] = None,
                 pos: Optional[Tensor] = None,
                 query_pos: Optional[Tensor] = None):
-        # if self.arch == 'pre_norm':
-        #     return self.forward_pre(tgt, memory, memory_mask,
-        #                             memory_key_padding_mask, pos, query_pos)
-        # elif self.arch == 'deepnorm':
-        #     raise NotImplementedError
         return self.forward_post(tgt, memory, memory_mask,
                                  memory_key_padding_mask, pos, query_pos)
 
@@ -270,10 +264,6 @@ class Transformer_local(nn.Module):
         # BxNxD
         bio_feats = self.base(x)
 
-        # bio_feats = self.filtering(bio_feats)
-        #
-        # bio_feats = self.weight_block(bio_feats)
-
         clot_feats = self.clothes(clothes)
 
         fusion_feat = torch.cat([bio_feats, clot_feats], dim=1)
@@ -310,44 +300,21 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
         self.net_config = net_config
         super(PASS_Transformer_DualAttn_joint, self).__init__()
         if net_config.vit_type=='base':
-            # self.base = vit_base_patch16_224_TransReID(img_size=(256,128), sie_xishu=3.0, local_feature=True, camera=0, view=0, stride_size=[12, 12], drop_path_rate=0.1)
-            # model_path = '<your project root> + /pass_vit_base_full.pth'
             self.visual_encoder = vit_base_patch16_224_TransReID(img_size=(256,128), sie_xishu=3.0, camera=0, view=0, stride_size=[16, 16], drop_path_rate=0.1, drop_rate=0.0,attn_drop_rate=0.0, gem_pool=False, stem_conv=False)
-            # self.visual_encoder = VisionTransformer(
-            # img_size=256, patch_size=16, embed_dim=768, depth=12, num_heads=12,
-            # mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), )
             self.visual_encoder_m = VisionTransformer(
             img_size=128, patch_size=16, embed_dim=768, depth=12, num_heads=12,
             mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), )
-            # for k,v in self.visual_encoder_m.named_parameters():
-            #     v.requires_grad=False
-            # import pdb;pdb.set_trace()
-            self.tokenizer = BertTokenizer.from_pretrained('<your project root> + /instructReID/bert-base-uncased')
+            self.tokenizer = BertTokenizer.from_pretrained('<your project root> + /Instruct-ReID/bert-base-uncased')
             
-            bert_config = BertConfig.from_json_file('<your project root> + /instructReID/config_bert.json')
-            self.text_encoder = BertForMaskedLM.from_pretrained('<your project root> + /instructReID/bert-base-uncased', config=bert_config)
+            bert_config = BertConfig.from_json_file('<your project root> + /Instruct-ReID/config_bert.json')
+            self.text_encoder = BertForMaskedLM.from_pretrained('<your project root> + /Instruct-ReID/bert-base-uncased', config=bert_config)
             
-            self.text_encoder_m = BertForMaskedLM.from_pretrained('<your project root> + /instructReID/bert-base-uncased', config=bert_config)
-            # for k,v in self.text_encoder_m.named_parameters():
-            #     v.requires_grad=False
+            self.text_encoder_m = BertForMaskedLM.from_pretrained('<your project root> + /Instruct-ReID/bert-base-uncased', config=bert_config)
             self.text_width = self.text_encoder.config.hidden_size
             
-            # if model_path != '':
-            #     self.visual_encoder.load_param(model_path,hw_ratio=2)
         else:
             self.base = deit_small_patch16_224_TransReID(patch_size=net_config.patch_size_bio, stride_size=net_config.stride_size_bio,)
-        # attn_drop_rate = net_config.dropout_clo
-        # patch_size = net_config.patch_size_clo
-        # stride_size = net_config.stride_size_clo
-        # if net_config.vit_type=='base':
-        #     # self.py_model_clip, self.transform_clip = clip.load('/mnt/lustre/tangshixiang/hwz/CLIP/ViT-B-32.pt', device='cuda', jit=False)
-        #     # self.py_model_clip = CLIPModel.from_pretrained('./fashion_clip_model')
-        #     # for k,v in self.py_model_clip.named_parameters():
-        #     #     v.requires_grad=False
-        #     self.clothes = nn.Linear(512, 768, bias=False)
-        #     self.project = nn.Linear(512, 129*768, bias=False)
-        # else:
-        #     self.clothes = deit_small_patch16_224_TransReID(img_size=(128, 128), patch_size=patch_size, stride_size=stride_size, attn_drop_rate=attn_drop_rate)
+
         if net_config.vit_type=='base':
             self.in_planes = 768
             self.num_features = 768
@@ -367,39 +334,7 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
                             ]
         self.copy_params()
         self.project = nn.Linear(768, 768, bias=False)
-        # if self.feat_fusion == 'cat':
-        #     self.classifier = nn.Linear(self.in_planes, self.num_classes, bias=False)
-        #     self.classifier.apply(weights_init_classifier)
-        
-        # if self.feat_fusion == 'mean':
-        #     self.classifier = nn.Linear(self.in_planes, self.num_classes, bias=False)
-        #     self.classifier.apply(weights_init_classifier)
-        
-        # if self.multi_neck:
-        #     self.bottleneck = nn.BatchNorm1d(self.in_planes)
-        #     self.bottleneck.bias.requires_grad_(False)
-        #     self.bottleneck.apply(weights_init_kaiming)
-        # else:
-        #     if self.feat_fusion == 'cat':
-        #         self.bottleneck = nn.BatchNorm1d(self.in_planes*2)
-        #         self.bottleneck.bias.requires_grad_(False)
-        #         self.bottleneck.apply(weights_init_kaiming)
-        #     elif self.feat_fusion == 'mean':
-        #         self.bottleneck = nn.BatchNorm1d(self.in_planes)
-        #         self.bottleneck.bias.requires_grad_(False)
-        #         self.bottleneck.apply(weights_init_kaiming)
 
-        # self.dropout = nn.Dropout(self.dropout_rate)
-        
-        # fusion_layers = []
-        # for i in range(net_config.vit_fusion_layer):
-        #     if net_config.attn_type=='fc':
-        #         fusion_layers.append(torch.nn.Linear(self.num_features*2, self.num_features*2))
-        #     else:
-        #         fusion_layers.append(copy.deepcopy(self.base.blocks[-i]))
-        # self.fusion = nn.Sequential(*fusion_layers)
-            
-        # self.norm = nn.LayerNorm(self.num_features, eps=1e-6)
         if self.net_config.fusion_loss=='all':
             self.feat_bn = nn.BatchNorm1d(self.num_features)
             self.feat_bn.bias.requires_grad_(False)
@@ -410,21 +345,7 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
         self.fusion_feat_bn.bias.requires_grad_(False)
         init.constant_(self.fusion_feat_bn.weight, 1)
         init.constant_(self.fusion_feat_bn.bias, 0)
-        # self.fusion_feat_bn_cat = nn.BatchNorm1d(2*self.num_features)
-        # self.fusion_feat_bn_cat.bias.requires_grad_(False)
-        # init.constant_(self.fusion_feat_bn_cat.weight, 1)
-        # init.constant_(self.fusion_feat_bn_cat.bias, 0)
-        # if 't2i' in this_task_info.task_name:
-        #     if self.net_config.fusion_loss=='all':
-        #         self.classifier = nn.Linear(self.num_features, 1, bias=False)
-        #         init.normal_(self.classifier.weight, std=0.001)
-        #     if 'bio' in net_config.fusion_branch:
-        #         self.classifier_f = nn.Linear(self.num_features, 1, bias=False)
-        #         init.normal_(self.classifier_f.weight, std=0.001)
-        #     if 'clo' in net_config.fusion_branch:
-        #         self.classifier_c = nn.Linear(self.num_features, 1, bias=False)
-        #         init.normal_(self.classifier_c.weight, std=0.001)
-        # else:
+
         # import pdb;pdb.set_trace()
         if self.net_config.fusion_loss=='all':
             self.classifier = nn.Linear(self.num_features, num_classes, bias=False)
@@ -436,10 +357,6 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             self.classifier_c = nn.Linear(self.num_features, num_classes, bias=False)
             init.normal_(self.classifier_c.weight, std=0.001)
         
-        # self.bottleneck = nn.BatchNorm1d(1024)
-        # self.bottleneck.bias.requires_grad_(False)
-        # self.bottleneck.apply(weights_init_kaiming)
-        # self.dropout = nn.Dropout(0.0)
         self.itm_head = nn.Linear(self.text_width, 2)
         self.prd_head = nn.Linear(self.text_width, 2)
         self.mrtd_head = nn.Linear(self.text_width, 2)
@@ -451,20 +368,7 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
         self.image_queue = nn.functional.normalize(self.image_queue, dim=0)
         self.text_queue = nn.functional.normalize(self.text_queue, dim=0)
         
-        # self.fusion_feat_bn = nn.BatchNorm1d(self.num_features)
-        # # self.fusion_feat_bn = nn.LayerNorm(self.num_features, eps=1e-6)
-        # self.fusion_feat_bn.bias.requires_grad_(False)
-        # init.constant_(self.fusion_feat_bn.weight, 1)
-        # init.constant_(self.fusion_feat_bn.bias, 0)
-        # if self.net_config.fusion_loss=='all':
-        #     self.classifier = nn.Linear(self.num_features, num_classes, bias=False)
-        #     init.normal_(self.classifier.weight, std=0.001)
-        # if 'bio' in net_config.fusion_branch:
-        #     self.classifier_f = nn.Linear(self.num_features, num_classes, bias=False)
-        #     init.normal_(self.classifier_f.weight, std=0.001)
-        # if 'clo' in net_config.fusion_branch:
-        #     self.classifier_c = nn.Linear(self.num_features, num_classes, bias=False)
-        #     init.normal_(self.classifier_c.weight, std=0.001)
+
         fusion_layers = []
         for i in range(net_config.vit_fusion_layer):
             if net_config.attn_type=='fc':
@@ -472,9 +376,6 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             else:
                 fusion_layers.append(copy.deepcopy(self.visual_encoder.blocks[-i]))
         self.fusion = nn.Sequential(*fusion_layers)
-        # self.transformer_cross_attention_layers = nn.ModuleList()
-        # for _ in range(1):
-        #     self.transformer_cross_attention_layers.append(CrossAttentionLayer(d_model=768, nhead=12, dropout=0.0))
         
     def dual_attn(self, bio_feats, clot_feats, project_feats=None, project_feats_down=None):
         bio_class = bio_feats[:, 0:1]
@@ -487,20 +388,6 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
         clot_fusion = self.fusion(clot_fusion)
         return bio_fusion, clot_fusion
 
-    # def mix_attn(self, bio_feats, clo_feats):
-    #     bio_clot_fusion = torch.cat([bio_feats, clo_feats], dim=1)
-    #     output_fusion = self.fusion(bio_clot_fusion)
-    #     return output_fusion
-    
-    # def fc_attn(self,bio_feats, clot_feats):
-    #     num_batch = bio_feats.size(0)
-    #     bio_class = bio_feats[:,0:1].reshape(num_batch,-1)
-    #     clot_class = clot_feats[:,0:1].reshape(num_batch,-1)
-    #     bio_clot_fusion = torch.cat([bio_class,clot_class],dim=1)
-    #     bio_clot_fusion = self.fusion(bio_clot_fusion)
-    #     bio_fusion = bio_clot_fusion[:, :self.num_features]
-    #     clot_fusion = bio_clot_fusion[:, self.num_features:]
-    #     return bio_fusion, clot_fusion
 
     def forward(self, x, instruction, this_task_info=None, label=None, cam_label=None, view_label=None, forzen=False):
         # BxNxD
@@ -513,15 +400,11 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
                 text_embeds_s = text_embeds[:,0]
                 text_feat = F.normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
                 text_attrs = instruction_text.attention_mask
-                # project_feats = self.project(text_embeds_s.float()).unsqueeze(1)
             else :
                 text_embeds = self.visual_encoder_m(instruction)
                 text_embeds_s = text_embeds[:,0]
                 text_feat = F.normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
                 text_attrs = torch.ones(text_embeds.size()[:-1], dtype=torch.long).to(text_embeds.device)
-                # project_feats = self.project(text_embeds_s.float()).unsqueeze(1)
-                # clot_feats_s_ = self.clothes(clot_feats_s.float())
-                # project_feats = self.project(clot_feats_s.float()).unsqueeze(1)
         else:
             if ('attr' in self.net_config.test_task_type or 'sc' in self.net_config.test_task_type or 't2i' in self.net_config.test_task_type or 'cross' in self.net_config.test_task_type) and 'ctcc' not in self.net_config.test_task_type:
                 instruction_text = self.tokenizer(instruction, padding='max_length', max_length=70, return_tensors="pt").to('cuda')
@@ -531,135 +414,16 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
                 text_embeds_s = text_embeds[:,0]
                 text_feat = F.normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
                 text_attrs = instruction_text.attention_mask
-                # project_feats = self.project(text_embeds_s.float()).unsqueeze(1)
             else:
-                # clot_feats_s, clot_feats = self.py_model_clip.get_image_features(instruction)
                 text_embeds = self.visual_encoder_m(instruction)
                 text_embeds_s = text_embeds[:,0]
                 text_feat = F.normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
                 text_attrs = torch.ones(text_embeds.size()[:-1], dtype=torch.long).to(text_embeds.device)
-                # project_feats = self.project(text_embeds_s.float()).unsqueeze(1)
         if this_task_info:
             task_name = this_task_info.task_name
         else:
             task_name = self.net_config.test_task_type
         
-        # global_feat, local_feat_1, local_feat_2, local_feat_3, local_feat_all = self.visual_encoder(x)
-        # image_embeds = torch.cat((global_feat.unsqueeze(1), local_feat_all), dim=1)
-        # # image_embeds = self.visual_encoder(x)
-        # image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(x.device)
-        # image_feat = F.normalize(self.vision_proj(image_embeds[:, 0, :]), dim=-1)
-        
-        # bio_fusion, clot_fusion = self.dual_attn(image_embeds, text_embeds)
-        # feat = self.feat_bn(global_feat)
-        # # import pdb;pdb.set_trace()
-        # bio_f = self.fusion_feat_bn(bio_fusion[:, 0])
-        # clot_f = self.fusion_feat_bn(clot_fusion[:, 0])
-        
-        # if not self.training:
-        #     if 't2i' in self.net_config.test_task_type:
-        #         return image_embeds, text_embeds, text_attrs, image_feat, text_feat, text_embeds
-        #     else:
-        #         return None, None, torch.cat([bio_f, clot_f], dim=1), text_embeds_s, text_embeds
-        
-        # idx = label.view(-1, 1)
-        # idx_all = torch.cat([idx.t(), self.idx_queue.clone().detach()], dim=1)
-        # # idx_all = torch.cat([idx.t()], dim=1)
-        # pos_idx = torch.eq(idx, idx_all).float()
-        # sim_targets = pos_idx / pos_idx.sum(1, keepdim=True)
-        # for line_idx in range(len(sim_targets)):
-        #     sim_targets[line_idx][line_idx] = 1
-        # with torch.no_grad():
-        #     text_feat_all = torch.cat([text_feat.t(), self.text_queue.clone().detach()], dim=1)
-        #     # text_feat_all = torch.cat([text_feat.t()], dim=1)
-            
-        #     image_feat_all = torch.cat([image_feat.t(), self.image_queue.clone().detach()], dim=1)
-        #     # image_feat_all = torch.cat([image_feat.t()], dim=1)
-        # sim_i2t = image_feat @ text_feat_all / self.temp
-        # sim_t2i = text_feat @ image_feat_all / self.temp
-        # sim_i2i = image_feat @ image_feat_all / self.temp
-        # sim_t2t = text_feat @ text_feat_all / self.temp
-        
-        # loss_i2t = -torch.sum(F.log_softmax(sim_i2t, dim=1) * sim_targets, dim=1).mean()
-        # loss_t2i = -torch.sum(F.log_softmax(sim_t2i, dim=1) * sim_targets, dim=1).mean()
-        # loss_i2i = -torch.sum(F.log_softmax(sim_i2i, dim=1) * sim_targets, dim=1).mean()
-        # loss_t2t = -torch.sum(F.log_softmax(sim_t2t, dim=1) * sim_targets, dim=1).mean()
-        # loss_cl = (loss_i2t + loss_t2i + loss_i2i + loss_t2t) / 4
-        
-        # if 't2i' in task_name:
-        #     self._dequeue_and_enqueue(image_feat, text_feat, idx)
-        
-        # output_pos = self.text_encoder.bert(encoder_embeds=text_embeds,
-        #                                     attention_mask=text_attrs,
-        #                                     encoder_hidden_states=image_embeds,
-        #                                     encoder_attention_mask=image_atts,
-        #                                     return_dict=True,
-        #                                     mode='fusion',
-        #                                     )
-        
-        # # label = label.view(-1, 1)
-        # # label_all = torch.cat([label.t(), self.idx_queue.clone().detach()], dim=1)
-        # # # label_all = torch.cat([label.t()], dim=1)
-        # # pos_idx = torch.eq(label, label_all).float()
-        
-        # # with torch.no_grad():
-        # #     bs = image_feat.size(0)
-        # #     weights_i2t = F.softmax(sim_i2t[:, :bs], dim=1)
-        # #     weights_t2i = F.softmax(sim_t2i[:, :bs], dim=1)
-        # #     mask = torch.eq(label, label.T)
-        # #     weights_i2t.masked_fill_(mask, 0)
-        # #     weights_t2i.masked_fill_(mask, 0)
-        # # neg_idx = torch.multinomial(weights_t2i, 1).flatten()
-        # # image_embeds_n = image_embeds[neg_idx]
-        
-        # with torch.no_grad():
-        #     bs = image_feat.size(0)
-        #     weights_i2t = F.softmax(sim_i2t[:, :bs], dim=1)
-        #     weights_t2i = F.softmax(sim_t2i[:, :bs], dim=1)
-        #     mask = torch.eq(idx, idx.T)
-        #     weights_i2t.masked_fill_(mask, 0)
-        #     weights_t2i.masked_fill_(mask, 0)
-        # neg_idx = torch.multinomial(weights_t2i, 1).flatten()
-        # image_embeds_n = image_embeds[neg_idx]
-        
-        # text_neg_idx = torch.multinomial(weights_i2t, 1).flatten()
-        # text_embeds_n = text_embeds[text_neg_idx]
-        # text_attrs_n = text_attrs[text_neg_idx]
-        
-        
-        # text_embeds_all = torch.cat([text_embeds, text_embeds_n], dim=0)
-        # text_attrs_all = torch.cat([text_attrs, text_attrs_n], dim=0)
-        # image_embeds_all = torch.cat([image_embeds_n, image_embeds], dim=0)
-        # image_atts_all = torch.cat([image_atts, image_atts], dim=0)
-        
-        
-        # output_neg_cross = self.text_encoder.bert(encoder_embeds=text_embeds_all,
-        #                                         attention_mask=text_attrs_all,
-        #                                         encoder_hidden_states=image_embeds_all,
-        #                                         encoder_attention_mask=image_atts_all,
-        #                                         return_dict=True,
-        #                                         mode='fusion',
-        #                                         )
-        
-        
-        # vl_embeddings = torch.cat([output_pos.last_hidden_state[:, 0, :], output_neg_cross.last_hidden_state[:, 0, :]], dim=0)
-        # vl_labels = torch.cat([torch.ones(output_pos.last_hidden_state.shape[0], dtype=torch.long), torch.zeros(output_neg_cross.last_hidden_state.shape[0], dtype=torch.long)], dim=0).to(vl_embeddings.device)
-        # shuffle_idx = random.sample(range(vl_embeddings.shape[0]), vl_embeddings.shape[0])
-        # # import pdb;pdb.set_trace()
-        # vl_output = self.itm_head(vl_embeddings[shuffle_idx])
-        # loss_pitm = F.cross_entropy(vl_output, vl_labels[shuffle_idx])
-        
-        # final_feat_after = feat
-        
-        # logits = self.classifier(final_feat_after)
-        
-        # f_logits = self.classifier_f(bio_f)
-        # c_logits = self.classifier_c(clot_f)
-        
-        # if 't2i' in task_name:
-        #     return image_feat, text_feat, output_pos, output_neg_cross, logits, vl_output, vl_labels[shuffle_idx], loss_cl, loss_pitm
-        # else:
-        #     return global_feat, bio_f, clot_f, logits, f_logits, c_logits, text_embeds_s
         
         if 't2i' in task_name:
             global_feat, local_feat_1, local_feat_2, local_feat_3, local_feat_all = self.visual_encoder(x)
@@ -669,32 +433,21 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             image_feat = F.normalize(self.vision_proj(image_embeds[:, 0, :]), dim=-1)
             
             if not self.training:
-                # return image_feat, clot_feats, clot_attrs, image_feat, clot_feats_s, clot_feats
                 return image_embeds, text_embeds, text_attrs, image_feat, text_feat, text_embeds
             
             idx = label.view(-1, 1)
             idx_all = torch.cat([idx.t(), self.idx_queue.clone().detach()], dim=1)
-            # idx_all = torch.cat([idx.t()], dim=1)
             pos_idx = torch.eq(idx, idx_all).float()
             sim_targets = pos_idx / pos_idx.sum(1, keepdim=True)
-            # for line_idx in range(len(sim_targets)):
-            #     sim_targets[line_idx][line_idx] = 1
-                
-            
-            # global_feat, local_feat_1, local_feat_2, local_feat_3, local_feat_all = self.base(x, cam_label=cam_label, view_label=view_label)
-            
-            # image_embeds = torch.cat((global_feat.unsqueeze(1),local_feat_all), dim=1)
+
             
             with torch.no_grad():
                 self._momentum_update()
                 text_output_m = self.text_encoder_m.bert(instruction_text.input_ids, attention_mask=instruction_text.attention_mask, return_dict=True, mode='text')
                 text_feat_m = F.normalize(self.text_proj_m(text_output_m.last_hidden_state[:, 0, :]), dim=-1)
                 text_feat_all = torch.cat([text_feat_m.t(), self.text_queue.clone().detach()], dim=1)
-                # text_feat_all = torch.cat([text_feat.t(), self.text_queue.clone().detach()], dim=1)
-                # text_feat_all = torch.cat([text_feat.t()], dim=1)
                 
                 image_feat_all = torch.cat([image_feat.t(), self.image_queue.clone().detach()], dim=1)
-                # image_feat_all = torch.cat([image_feat.t()], dim=1)
                 sim_i2t_m = image_feat @ text_feat_all / self.temp
                 sim_t2i_m = text_feat_m @ image_feat_all / self.temp
                 sim_i2i_m = image_feat @ image_feat_all / self.temp
@@ -719,14 +472,6 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             
             self._dequeue_and_enqueue(image_feat, text_feat_m, idx)
             
-            # instruction_text = self.tokenizer(instruction, padding='longest', max_length=50, return_tensors="pt").to('cuda')
-            # # extract text features
-            # text_output = self.text_encoder_m.bert(instruction_text.input_ids, attention_mask=instruction_text.attention_mask, return_dict=True, mode='text')
-            # text_embeds = text_output.last_hidden_state
-            # text_feat = F.normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
-            
-            # bio_fusion, clot_fusion = self.dual_attn(bio_feats, clot_feats)
-            # import pdb;pdb.set_trace()
             output_pos = self.text_encoder.bert(encoder_embeds=text_embeds,
                                                 attention_mask=instruction_text.attention_mask,
                                                 encoder_hidden_states=image_embeds,
@@ -765,11 +510,8 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             vl_embeddings = torch.cat([output_pos.last_hidden_state[:, 0, :], output_neg_cross.last_hidden_state[:, 0, :]], dim=0)
             vl_labels = torch.cat([torch.ones(output_pos.last_hidden_state.shape[0], dtype=torch.long), torch.zeros(output_neg_cross.last_hidden_state.shape[0], dtype=torch.long)], dim=0).to(vl_embeddings.device)
             shuffle_idx = random.sample(range(vl_embeddings.shape[0]), vl_embeddings.shape[0])
-            # import pdb;pdb.set_trace()
             vl_output = self.itm_head(vl_embeddings[shuffle_idx])
             loss_pitm = F.cross_entropy(vl_output, vl_labels[shuffle_idx])
-            # prd_output = self.prd_head(output_pos.last_hidden_state[:, 0, :])
-            # loss_prd = F.cross_entropy(prd_output, replace)
             
             # Sensitivity-aware Learning: Masked Language Modeling + Momentum-based Replaced Token Detection
             input_ids = instruction_text.input_ids.clone()
@@ -824,49 +566,25 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
             return image_feat, text_feat, output_pos, output_neg_cross, vl_output, vl_labels[shuffle_idx], loss_cl, loss_pitm, loss_mlm, loss_mrtd
         else:
             global_feat, local_feat_1, local_feat_2, local_feat_3, local_feat_all = self.visual_encoder(x)
-            # global_feat, local_feat_1, local_feat_2, local_feat_3, local_feat_all = self.visual_encoder(x, project_feats=project_feats.repeat(1,132,1))
-            # # import pdb;pdb.set_trace()
+
             image_embeds = torch.cat((global_feat.unsqueeze(1), local_feat_all), dim=1)
             image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(x.device)
             
-            # output_pos = self.text_encoder_m.bert(encoder_embeds=bio_feats,
-            #                                     attention_mask=image_atts,
-            #                                     encoder_hidden_states=text_embeds,
-            #                                     encoder_attention_mask=text_attrs,
-            #                                     return_dict=True,
-            #                                     mode='fusion',
-            #                                     )
-            
-            # bio_fusion, clot_fusion = self.dual_attn(bio_feats, clot_feats)
+
             bio_fusion, clot_fusion = self.dual_attn(image_embeds, text_embeds)
-            # bio_fusion = output_pos.last_hidden_state
-            # clot_fusion = output_pos.last_hidden_state
-            # bio_fusion, clot_fusion = self.dual_attn_se(bio_feats, clot_feats, project_feats=project_feats.repeat(1,129,1))
-            
+
             feat = self.feat_bn(global_feat)
-            # feat = self.bottleneck(global_feat)
-            # local_feat_1_bn = self.bottleneck_1(local_feat_1)
-            # local_feat_2_bn = self.bottleneck_2(local_feat_2)
-            # local_feat_3_bn = self.bottleneck_3(local_feat_3)
-            # import pdb;pdb.set_trace()
             bio_f = self.fusion_feat_bn(bio_fusion[:, 0])
             clot_f = self.fusion_feat_bn(clot_fusion[:, 0])
             
             if not self.training:
-                # if 'sc' in self.net_config.test_task_type and 'ctcc' not in self.net_config.test_task_type:
                 return None, None, torch.cat([bio_f, clot_f], dim=1), text_embeds_s, text_embeds
-                # else:
-                # return None, None, torch.cat([bio_fusion[:, 0], clot_fusion[:, 0]], dim=1), clot_feats_s, clot_feats
             
-            # final_feat_after = torch.cat((feat, local_feat_1_bn / 3 + local_feat_2_bn / 3 + local_feat_3_bn / 3), dim=1)
-            # final_feat_after = torch.cat((feat, local_feat_1_bn), dim=1)
             final_feat_after = feat
-            
             logits = self.classifier(final_feat_after)
             
             f_logits = self.classifier_f(bio_f)
             c_logits = self.classifier_c(clot_f)
-            # if ('sc' in this_task_info.task_name) and 'ctcc' not in this_task_info.task_name:
             return global_feat, bio_f, clot_f, logits, f_logits, c_logits, text_embeds_s
             
     def load_param(self, trained_path):
@@ -895,10 +613,6 @@ class PASS_Transformer_DualAttn_joint(nn.Module):
         text_feats = concat_all_gather(text_feat)
         idxs = concat_all_gather(idx)
         batch_size = image_feats.shape[0]
-        # image_feats = image_feat
-        # text_feats = text_feat
-        # idxs = idx
-        # batch_size = image_feats.shape[0]
         ptr = int(self.queue_ptr)
         # replace the keys at ptr (dequeue and enqueue)
         empty = self.image_queue.size(1) - ptr

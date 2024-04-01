@@ -142,7 +142,7 @@ class DataBuilder_t2i(object):
         
         data_root = self.this_task_info.root_path if self.this_task_info else self.args.root
         test_set = list(set(query_dataset) | set(gallery_dataset))
-        json_list = ' <your project root> + instructReID/data/cuhk_pedes/caption_t2i_v2.json'
+        json_list = ' <your project root> + Instruct-ReID/data/cuhk_pedes/caption_t2i_v2.json'
         test_loader = DataLoader(PreProcessor(test_set, root=data_root, json_list=json_list, root_additional=None, 
                                               transform=test_transformer,
                                               clothes_transform=test_clothes_transformer,blur_clo=self.args.pool_clo),

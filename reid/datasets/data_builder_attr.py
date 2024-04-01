@@ -109,7 +109,7 @@ class DataBuilder_attr(object):
                                                     self.args.num_instances,
                                                     max_iter=self.args.iters
                                                     )
-        json_list = '<your project root> + instructReID/data/real1/datalist/runner_real1_v1_gpt.json'
+        json_list = '<your project root> + Instruct-ReID/data/real1/datalist/runner_real1_v1_gpt.json'
         data_root = self.this_task_info.root_path if self.this_task_info else self.args.root
         train_loader = DataLoader(PreProcessor(dataset, root=data_root, json_list=json_list,
                                                transform=train_transformer,
@@ -140,7 +140,7 @@ class DataBuilder_attr(object):
         
         data_root = self.this_task_info.root_path if self.this_task_info else self.args.root
         test_set = list(set(query_dataset) | set(gallery_dataset))
-        json_list = '<your project root> + instructReID/data/real2/datalist/real2_v1.json'
+        json_list = '<your project root> + Instruct-ReID/data/real2/datalist/real2_v1.json'
         test_loader = DataLoader(PreProcessor(test_set, root=data_root, json_list=json_list, root_additional=None, 
                                               transform=test_transformer,
                                               clothes_transform=test_clothes_transformer,blur_clo=self.args.pool_clo),

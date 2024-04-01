@@ -4,5 +4,5 @@ tasks:
         gres_ratio: 1
         task_name: DataBuilder_cc
         # ceph or cluster
-        root_path: <your project root> + instructReID/data/vc_clothes
-        train_file_path: <your project root> + instructReID/data/vc_clothes/datalist/train_cc_clo.txt
+        root_path: <your project root> + Instruct-ReID/data/vc_clothes
+        train_file_path: <your project root> + Instruct-ReID/data/vc_clothes/datalist/train_cc_clo.txt

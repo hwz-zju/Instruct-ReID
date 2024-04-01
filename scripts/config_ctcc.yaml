@@ -4,5 +4,5 @@ tasks:
     gres_ratio: 1
     task_name: DataBuilder_ctcc
     # ceph or cluster
-    root_path: <your project root> + instructReID/data/real1
-    train_file_path: <your project root> + instructReID/data/real1/datalist/train_ctcc.txt
+    root_path: <your project root> + Instruct-ReID/data/real1
+    train_file_path: <your project root> + Instruct-ReID/data/real1/datalist/train_ctcc.txt
